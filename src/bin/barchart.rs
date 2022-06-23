@@ -14,10 +14,10 @@ use std::{
 };
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{BarChart, Block, Borders, List, ListItem, Paragraph},
+    widgets::{BarChart, Block, Borders, Clear, List, ListItem, Paragraph},
     Frame, Terminal,
 };
 
@@ -36,7 +36,8 @@ impl<'a> SortMethod {
 struct App<'a> {
     data: Vec<(&'a str, u64)>,
     sort_method: SortMethod,
-    sorting: bool,
+    sort_popup: bool,
+    auto: bool,
     sorted: bool,
     tick_rate: u64,
     i: usize,
@@ -48,7 +49,8 @@ impl<'a> App<'a> {
         App {
             data: gen_rand_data(30),
             sort_method: SortMethod::BubbleSort,
-            sorting: false,
+            sort_popup: false,
+            auto: false,
             sorted: false,
             tick_rate: 50,
             i: 0,
@@ -67,7 +69,7 @@ impl<'a> App<'a> {
             // loop finished
             self.i = 0;
             self.j = 0;
-            self.sorting = false;
+            self.auto = false;
             self.sorted = true;
             return;
         }
@@ -120,7 +122,7 @@ fn run_app<B: Backend>(
     loop {
         terminal.draw(|f| ui(f, &app))?;
         let tick_rate = Duration::from_millis(app.tick_rate);
-        if app.sorting {
+        if app.auto {
             let timeout = tick_rate
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
@@ -130,7 +132,7 @@ fn run_app<B: Backend>(
                         return Ok(());
                     }
                     if let KeyCode::Enter = key.code {
-                        app.sorting = false
+                        app.auto = false
                     }
                 }
             }
@@ -144,36 +146,35 @@ fn run_app<B: Backend>(
             }
         } else {
             if let Event::Key(key) = event::read()? {
-                if let KeyCode::Char('q') = key.code {
-                    return Ok(());
-                }
-                if let KeyCode::Enter = key.code {
-                    app.sorting = true;
-                }
-                if let KeyCode::Char('n') = key.code {
-                    if !app.sorted {
-                        match app.sort_method {
-                            SortMethod::BubbleSort => app.bubble_sort(),
+                match key.code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Enter => app.auto = true,
+                    KeyCode::Char('s') => {
+                        app.sort_popup = !app.sort_popup
+                    },
+                    KeyCode::Char('n') => {
+                        if !app.sorted {
+                            match app.sort_method {
+                                SortMethod::BubbleSort => app.bubble_sort(),
+                            }
                         }
                     }
-                }
-                if let KeyCode::Char('r') = key.code {
-                    app.data = gen_rand_data(6);
-
-                    // reset pointer
-                    (app.i, app.j) = (0, 0);
-                }
-                if let KeyCode::Up = key.code {
-                    app.data = gen_rand_data(app.data.len() + 1);
-
-                    // reset pointer
-                    (app.i, app.j) = (0, 0);
-                }
-                if let KeyCode::Down = key.code {
-                    app.data = gen_rand_data(app.data.len() - 1);
-
-                    // reset pointer
-                    (app.i, app.j) = (0, 0);
+                    KeyCode::Char('r') => {
+                        app.data = gen_rand_data(6);
+                        // reset pointer
+                        (app.i, app.j) = (0, 0);
+                    }
+                    KeyCode::Up => {
+                        app.data = gen_rand_data(app.data.len() + 1);
+                        // reset pointer
+                        (app.i, app.j) = (0, 0);
+                    }
+                    KeyCode::Down => {
+                        app.data = gen_rand_data(app.data.len() - 1);
+                        // reset pointer
+                        (app.i, app.j) = (0, 0);
+                    }
+                    _ => {}
                 }
             }
         }
@@ -238,7 +239,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .title("Graph")
                 .title_alignment(Alignment::Center)
                 .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
-                .border_style(Style::default().fg(if app.sorting {
+                .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
                     if app.sorted {
@@ -261,7 +262,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .block(
             Block::default()
                 .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-                .border_style(Style::default().fg(if app.sorting {
+                .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
                     if app.sorted {
@@ -280,7 +281,14 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     f.render_widget(
         Paragraph::new(Span::raw(format!("Debug: {:#?}", f.size()))),
         chunks[4],
-    )
+    );
+
+    if app.sort_popup {
+        let block = Block::default().title("Popup").borders(Borders::ALL);
+        let area = centered_rect(60, 20, f.size());
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(block, area);
+    }
 }
 
 fn gen_rand_data<'a>(n: usize) -> Vec<(&'a str, u64)> {
@@ -293,4 +301,30 @@ fn gen_rand_data<'a>(n: usize) -> Vec<(&'a str, u64)> {
         data.push(("", *value));
         data
     })
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
