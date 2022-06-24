@@ -160,19 +160,19 @@ fn run_app<B: Backend>(
                         }
                     }
                     KeyCode::Char('r') => {
-                        app.data = gen_rand_data(6);
-                        // reset pointer
+                        app.data = gen_rand_data(app.data.len());
                         (app.i, app.j) = (0, 0);
+                        app.sorted = false;
                     }
                     KeyCode::Up => {
                         app.data = gen_rand_data(app.data.len() + 1);
-                        // reset pointer
                         (app.i, app.j) = (0, 0);
+                        app.sorted = false;
                     }
                     KeyCode::Down => {
                         app.data = gen_rand_data(app.data.len() - 1);
-                        // reset pointer
                         (app.i, app.j) = (0, 0);
+                        app.sorted = false;
                     }
                     _ => {}
                 }
@@ -189,8 +189,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
             [
                 Constraint::Percentage(27),
                 Constraint::Length(3),
-                Constraint::Percentage(30),
-                Constraint::Percentage(10),
+                Constraint::Percentage(40),
                 Constraint::Percentage(27),
             ]
             .as_ref(),
@@ -233,6 +232,19 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .alignment(Alignment::Center);
     f.render_widget(menu, menus[2]);
 
+
+    let graph = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(0)
+        .constraints(
+            [
+                Constraint::Percentage(83),
+                Constraint::Percentage(17),
+            ]
+            .as_ref(),
+        )
+        .split(chunks[2]);
+
     let barchart = BarChart::default()
         .block(
             Block::default()
@@ -250,10 +262,10 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 })),
         )
         .data(&app.data)
-        .bar_width(2)
+        .bar_width(1)
         .bar_style(Style::default().fg(Color::Yellow))
         .value_style(Style::default().bg(Color::Yellow));
-    f.render_widget(barchart, chunks[2]);
+    f.render_widget(barchart, graph[0]);
 
     let mut pointer = vec![("", 0); app.data.len()];
     pointer[app.j].1 = 1;
@@ -273,14 +285,14 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 })),
         )
         .data(&pointer)
-        .bar_width(2)
+        .bar_width(1)
         .bar_style(Style::default().fg(Color::Green))
         .value_style(Style::default().bg(Color::Green));
-    f.render_widget(barchart, chunks[3]);
+    f.render_widget(barchart, graph[1]);
 
     f.render_widget(
         Paragraph::new(Span::raw(format!("Debug: {:#?}", f.size()))),
-        chunks[4],
+        chunks[3],
     );
 
     if app.sort_popup {
