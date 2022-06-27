@@ -44,14 +44,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .style(Style::default().fg(Color::White))
         .alignment(Alignment::Center);
     f.render_widget(menu, menus[0]);
-    let menu = Paragraph::new(Span::raw(app.data.len().to_string()))
-        .block(
-            Block::default()
-                .title("[D]ata Length")
-                .borders(Borders::ALL),
-        )
-        .style(Style::default().fg(Color::White))
-        .alignment(Alignment::Center);
+    let menu = Paragraph::new(Span::raw(
+        app.sort_component.get_data_len().to_string(),
+    ))
+    .block(
+        Block::default()
+            .title("[D]ata Length")
+            .borders(Borders::ALL),
+    )
+    .style(Style::default().fg(Color::White))
+    .alignment(Alignment::Center);
     f.render_widget(menu, menus[1]);
     let menu = Paragraph::new(Span::raw(app.tick_rate.to_string()))
         .block(Block::default().title("[T]ick Rate").borders(Borders::ALL))
@@ -67,6 +69,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         )
         .split(chunks[2]);
 
+    let data = app.sort_component.get_data();
     let barchart = BarChart::default()
         .block(
             Block::default()
@@ -76,22 +79,21 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
-                    if app.sorted {
+                    if app.sort_component.is_sort() {
                         Color::Green
                     } else {
                         Color::Reset
                     }
                 })),
         )
-        .data(&app.data)
+        .data(&data)
         .bar_width(1)
         .bar_gap(1)
         .bar_style(Style::default().fg(Color::Yellow))
         .value_style(Style::default().bg(Color::Yellow));
     f.render_widget(barchart, graph[0]);
 
-    let mut pointer = vec![("", 0); app.data.len()];
-    pointer[app.j].1 = 1;
+    let pointer = app.sort_component.get_pointer();
 
     let barchart = BarChart::default()
         .block(
@@ -100,7 +102,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
                 .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
-                    if app.sorted {
+                    if app.sort_component.is_sort() {
                         Color::Green
                     } else {
                         Color::Reset
@@ -115,7 +117,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     f.render_widget(barchart, graph[1]);
 
     f.render_widget(
-        Paragraph::new(Span::raw(format!("Debug: {:#?}", f.size()))),
+        Paragraph::new(Span::raw(format!("Debug: {:#?}", app.sort_component.is_sort()))),
         chunks[3],
     );
 

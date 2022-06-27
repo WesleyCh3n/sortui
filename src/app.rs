@@ -6,38 +6,31 @@ use std::{
 use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use tui::{backend::Backend, Terminal};
 
-use crate::{sort::SortMethod, ui::ui, util::gen_rand_data};
+use crate::{
+    components::{bubble_sort::BubbleSort, SortComponent, selection_sort::SelectionSort},
+    sort::SortMethod,
+    ui::ui,
+};
 
 pub struct App<'a> {
-    pub data: Vec<(&'a str, u64)>,
     pub sort_method: SortMethod,
     pub sort_popup: bool,
     pub auto: bool,
-    pub sorted: bool,
     pub tick_rate: u64,
-    pub i: usize,
-    pub j: usize,
     pub is_quit: bool,
+    pub sort_component: Box<dyn SortComponent<'a>>,
 }
 
-impl<'a> App<'a> {
-    pub fn new() -> App<'a> {
+impl App<'static> {
+    pub fn new() -> App<'static> {
         App {
-            data: gen_rand_data(45),
             sort_method: SortMethod::BubbleSort,
             sort_popup: false,
             auto: false,
-            sorted: false,
             tick_rate: 50,
-            i: 0,
-            j: 0,
             is_quit: false,
+            sort_component: Box::new(BubbleSort::new(45)),
         }
-    }
-
-    pub fn reset_graph(&mut self) {
-        (self.i, self.j) = (0, 0);
-        self.sorted = false;
     }
 
     pub fn event(&mut self, key: KeyEvent) -> io::Result<()> {
@@ -46,22 +39,22 @@ impl<'a> App<'a> {
             KeyCode::Enter => self.auto = true,
             KeyCode::Char('s') => self.sort_popup = !self.sort_popup,
             KeyCode::Char('n') => {
-                if self.sorted {
+                if self.sort_component.is_sort() {
                     return Ok(());
                 }
-                SortMethod::sort(self.sort_method.clone(), self);
+                self.sort_component.sort();
             }
             KeyCode::Char('r') => {
-                self.data = gen_rand_data(self.data.len());
-                self.reset_graph()
+                let len = self.sort_component.get_data_len();
+                self.sort_component.shuffle(len);
             }
             KeyCode::Up => {
-                self.data = gen_rand_data(self.data.len() + 1);
-                self.reset_graph()
+                let len = self.sort_component.get_data_len() + 1;
+                self.sort_component.shuffle(len);
             }
             KeyCode::Down => {
-                self.data = gen_rand_data(self.data.len() - 1);
-                self.reset_graph()
+                let len = self.sort_component.get_data_len() - 1;
+                self.sort_component.shuffle(len);
             }
             _ => {}
         }
@@ -84,10 +77,10 @@ impl<'a> App<'a> {
             }
         }
         if last_tick.elapsed() >= tick_rate {
-            if self.sorted {
+            if self.sort_component.is_sort() {
                 return Ok(());
             }
-            SortMethod::sort(self.sort_method.clone(), self);
+            self.sort_component.sort();
         }
         Ok(())
     }
@@ -110,13 +103,13 @@ impl<'a> App<'a> {
                             }
                             KeyCode::Char('1') => {
                                 self.sort_method = SortMethod::BubbleSort;
-                                (self.i, self.j) = (0, 0);
-                                // initial state
-                                // pointer follow which variable
+                                let len = self.sort_component.get_data_len();
+                                self.sort_component = Box::new(BubbleSort::new(len));
                             }
                             KeyCode::Char('2') => {
                                 self.sort_method = SortMethod::SelectionSort;
-                                (self.i, self.j) = (0, 1);
+                                let len = self.sort_component.get_data_len();
+                                self.sort_component = Box::new(SelectionSort::new(len));
                             }
                             _ => {}
                         }
