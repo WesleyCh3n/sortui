@@ -27,6 +27,7 @@ impl<'a> SortComponent<'a> for BubbleSort<'a> {
     fn shuffle(&mut self, len: usize) {
         (self.i, self.j) = (0, 1);
         self.data = gen_rand_data(len);
+        self.is_done = false;
     }
     fn get_data(&self) -> Vec<(&'a str, u64)> {
         self.data.to_vec()

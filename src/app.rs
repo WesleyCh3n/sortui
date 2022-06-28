@@ -15,20 +15,29 @@ use crate::{
 
 pub struct App<'a> {
     pub sort_popup: bool,
+    pub len_popup: bool,
+    pub tick_popup: bool,
     pub auto: bool,
     pub tick_rate: u64,
     pub is_quit: bool,
     pub sort_component: Box<dyn SortComponent<'a>>,
+    pub fwidth: usize,
 }
 
 impl App<'static> {
     pub fn new() -> App<'static> {
         App {
+            sort_component: Box::new(BubbleSort::new(200)),
+
             sort_popup: false,
+            len_popup: false,
+            tick_popup: false,
+
             auto: false,
-            tick_rate: 50,
+            tick_rate: 20,
+
             is_quit: false,
-            sort_component: Box::new(BubbleSort::new(45)),
+            fwidth: 0,
         }
     }
 
@@ -37,7 +46,7 @@ impl App<'static> {
             KeyCode::Char('q') => self.is_quit = true,
             KeyCode::Enter => self.auto = true,
             KeyCode::Char('s') => self.sort_popup = !self.sort_popup,
-            KeyCode::Char('n') => {
+            KeyCode::Char(' ') => {
                 if self.sort_component.is_sort() {
                     return Ok(());
                 }
@@ -47,13 +56,28 @@ impl App<'static> {
                 let len = self.sort_component.get_data_len();
                 self.sort_component.shuffle(len);
             }
-            KeyCode::Up => {
+            KeyCode::Char('k') => {
                 let len = self.sort_component.get_data_len() + 1;
+                if len > self.fwidth {
+                    return Ok(());
+                }
                 self.sort_component.shuffle(len);
             }
-            KeyCode::Down => {
+            KeyCode::Char('j') => {
                 let len = self.sort_component.get_data_len() - 1;
+                if len < 2 {
+                    return Ok(());
+                }
                 self.sort_component.shuffle(len);
+            }
+            KeyCode::Char('l') => {
+                self.tick_rate += 5;
+            }
+            KeyCode::Char('h') => {
+                if self.tick_rate == 0 {
+                    return Ok(());
+                }
+                self.tick_rate -= 5;
             }
             _ => {}
         }
@@ -77,6 +101,7 @@ impl App<'static> {
         }
         if last_tick.elapsed() >= tick_rate {
             if self.sort_component.is_sort() {
+                self.auto = false;
                 return Ok(());
             }
             self.sort_component.sort();
@@ -89,7 +114,7 @@ impl App<'static> {
         terminal: &mut Terminal<B>,
     ) -> io::Result<()> {
         loop {
-            terminal.draw(|f| ui(f, &self))?;
+            terminal.draw(|f| ui(f, self))?;
 
             if self.auto {
                 self.auto_event()?
@@ -97,9 +122,6 @@ impl App<'static> {
                 if let Event::Key(key) = event::read()? {
                     if self.sort_popup {
                         match key.code {
-                            KeyCode::Char('q') | KeyCode::Char('s') => {
-                                self.sort_popup = false
-                            }
                             KeyCode::Char('1') => {
                                 let len = self.sort_component.get_data_len();
                                 self.sort_component =
@@ -110,9 +132,17 @@ impl App<'static> {
                                 self.sort_component =
                                     Box::new(SelectionSort::new(len));
                             }
-                            _ => {}
+                            KeyCode::Char('3') => {
+                                let len = self.sort_component.get_data_len();
+                                self.sort_component =
+                                    Box::new(SelectionSort::new(len));
+                            }
+                            _ => {
+                                self.sort_popup = false;
+                            }
                         }
-                        self.sort_popup = false;
+                    } else if self.len_popup {
+                    } else if self.tick_popup {
                     } else {
                         self.event(key)?
                     }

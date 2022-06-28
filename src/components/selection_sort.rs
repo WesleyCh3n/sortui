@@ -29,6 +29,7 @@ impl<'a> SortComponent<'a> for SelectionSort<'a> {
     fn shuffle(&mut self, len: usize) {
         (self.i, self.j, self.tmp_index) = (0, 1, 0);
         self.data = gen_rand_data(len);
+        self.is_done = false;
     }
     fn get_data(&self) -> Vec<(&'a str, u64)> {
         self.data.to_vec()

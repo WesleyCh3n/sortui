@@ -4,24 +4,34 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{BarChart, Block, Borders, Clear, List, ListItem, Paragraph},
+    widgets::{
+        self, BarChart, Block, BorderType, Borders, Clear, List, ListItem,
+        Paragraph,
+    },
     Frame,
 };
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+    let size = f.size();
+    app.fwidth = (size.width as usize - 4) / 2;
+    if app.sort_component.get_data_len() > (size.width as usize - 4) / 2 {
+        app.sort_component.shuffle((size.width as usize - 4) / 2);
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints(
             [
-                Constraint::Percentage(27),
+                Constraint::Percentage(25),
                 Constraint::Length(3),
                 Constraint::Percentage(40),
+                Constraint::Length(1),
                 Constraint::Percentage(27),
             ]
             .as_ref(),
         )
-        .split(f.size());
+        .split(size);
 
     let menus = Layout::default()
         .direction(Direction::Horizontal)
@@ -35,29 +45,62 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         )
         .split(chunks[1]);
 
+    // SortMethod
+    let auto_lambda = |c| {
+        if app.auto {
+            Color::Gray
+        } else {
+            c
+        }
+    };
+    let border_style = Style::default().fg(auto_lambda(Color::Reset));
+    let title_style = Style::default()
+        .fg(auto_lambda(Color::Cyan))
+        .add_modifier(Modifier::BOLD);
+    let content_style = Style::default().fg(auto_lambda(Color::Reset));
     let menu = Paragraph::new(Span::raw(app.sort_component.as_str()))
         .block(
             Block::default()
-                .title("[S]ort Method")
-                .borders(Borders::ALL),
+                .title(Spans::from(Span::styled(
+                    "Sort Method [S]",
+                    title_style,
+                )))
+                .borders(Borders::ALL)
+                .border_style(border_style)
+                .border_type(BorderType::Rounded),
         )
-        .style(Style::default().fg(Color::White))
+        .style(content_style)
         .alignment(Alignment::Center);
     f.render_widget(menu, menus[0]);
+
+    // Data Length
     let menu = Paragraph::new(Span::raw(
         app.sort_component.get_data_len().to_string(),
     ))
     .block(
         Block::default()
-            .title("[D]ata Length")
-            .borders(Borders::ALL),
+            .title(Spans::from(Span::styled("Data Length [J/K]", title_style)))
+            .borders(Borders::ALL)
+            .border_style(border_style)
+            .border_type(BorderType::Rounded),
     )
-    .style(Style::default().fg(Color::White))
+    .style(content_style)
     .alignment(Alignment::Center);
     f.render_widget(menu, menus[1]);
+
+    // Tick Rate
     let menu = Paragraph::new(Span::raw(app.tick_rate.to_string()))
-        .block(Block::default().title("[T]ick Rate").borders(Borders::ALL))
-        .style(Style::default().fg(Color::White))
+        .block(
+            Block::default()
+                .title(Spans::from(Span::styled(
+                    "Tick Rate [H/L]",
+                    title_style,
+                )))
+                .borders(Borders::ALL)
+                .border_style(border_style)
+                .border_type(BorderType::Rounded),
+        )
+        .style(content_style)
         .alignment(Alignment::Center);
     f.render_widget(menu, menus[2]);
 
@@ -73,9 +116,19 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     let barchart = BarChart::default()
         .block(
             Block::default()
-                .title("Graph")
+                .title(Spans::from(Span::styled(
+                    "Graph",
+                    Style::default()
+                        .fg(if app.auto {
+                            Color::Blue
+                        } else {
+                            Color::Cyan
+                        })
+                        .add_modifier(Modifier::BOLD),
+                )))
                 .title_alignment(Alignment::Center)
                 .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+                .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
@@ -99,6 +152,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .block(
             Block::default()
                 .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+                .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(if app.auto {
                     Color::Blue
                 } else {
@@ -117,8 +171,26 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     f.render_widget(ptr_chart, graph[1]);
 
     f.render_widget(
-        Paragraph::new(Span::raw(format!("Debug: {:#?}", app.sort_component.is_sort()))),
+        Paragraph::new(Span::styled(
+            "Enter: start/stop sorting, Space: next step, R: shuffle data",
+            Style::default().fg(Color::LightBlue),
+        ))
+        .alignment(Alignment::Left),
         chunks[3],
+    );
+
+    f.render_widget(
+        Paragraph::new(Span::raw(format!(
+            "Debug: fsize: {:?} vec: {:?}",
+            f.size(),
+            app.sort_component
+                .get_data()
+                .iter()
+                .map(|e| { e.1 })
+                .collect::<Vec<u64>>()
+        )))
+        .wrap(widgets::Wrap { trim: false }),
+        chunks[4],
     );
 
     if app.sort_popup {
@@ -153,38 +225,38 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 pub fn popup_ui<B: Backend>(f: &mut Frame<B>) {
-    // let block = Block::default().title("Popup").borders(Borders::ALL);
-    let items = [
-        ListItem::new(Spans::from(vec![
-            Span::styled(
-                "[1] ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                "BubbleSort",
-                Style::default().add_modifier(Modifier::BOLD),
-            ),
-        ])),
-        ListItem::new(Spans::from(vec![
-            Span::styled(
-                "[2] ",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                "SelectionSort",
-                Style::default().add_modifier(Modifier::BOLD),
-            ),
-        ])),
-    ];
+    let items: Vec<ListItem> = vec!["BubbleSort", "SelectionSort"]
+        .iter()
+        .enumerate()
+        .map(|e| {
+            ListItem::new(Spans::from(vec![
+                Span::styled(
+                    format!("[{}] ", e.0),
+                    Style::default()
+                        .fg(Color::LightBlue)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    format!("{}", e.1),
+                    Style::default().add_modifier(Modifier::BOLD),
+                ),
+            ]))
+        })
+        .collect();
+
     let sort_list = List::new(items)
-        .block(Block::default().title("Sort Method").borders(Borders::ALL))
-        .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
-        .highlight_symbol(">>");
+        .block(
+            Block::default()
+                .title(Spans::from(Span::styled(
+                    "Sort Method",
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                )))
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        )
+        .style(Style::default().fg(Color::White));
 
     let area = centered_rect(60, 20, f.size());
     f.render_widget(Clear, area); //this clears out the background
