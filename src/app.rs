@@ -7,13 +7,13 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use tui::{backend::Backend, Terminal};
 
 use crate::{
-    components::{bubble_sort::BubbleSort, SortComponent, selection_sort::SelectionSort},
-    sort::SortMethod,
+    components::{
+        bubble_sort::BubbleSort, selection_sort::SelectionSort, SortComponent,
+    },
     ui::ui,
 };
 
 pub struct App<'a> {
-    pub sort_method: SortMethod,
     pub sort_popup: bool,
     pub auto: bool,
     pub tick_rate: u64,
@@ -24,7 +24,6 @@ pub struct App<'a> {
 impl App<'static> {
     pub fn new() -> App<'static> {
         App {
-            sort_method: SortMethod::BubbleSort,
             sort_popup: false,
             auto: false,
             tick_rate: 50,
@@ -102,14 +101,14 @@ impl App<'static> {
                                 self.sort_popup = false
                             }
                             KeyCode::Char('1') => {
-                                self.sort_method = SortMethod::BubbleSort;
                                 let len = self.sort_component.get_data_len();
-                                self.sort_component = Box::new(BubbleSort::new(len));
+                                self.sort_component =
+                                    Box::new(BubbleSort::new(len));
                             }
                             KeyCode::Char('2') => {
-                                self.sort_method = SortMethod::SelectionSort;
                                 let len = self.sort_component.get_data_len();
-                                self.sort_component = Box::new(SelectionSort::new(len));
+                                self.sort_component =
+                                    Box::new(SelectionSort::new(len));
                             }
                             _ => {}
                         }

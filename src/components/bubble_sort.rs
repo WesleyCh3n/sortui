@@ -21,6 +21,9 @@ impl<'a> BubbleSort<'a> {
 }
 
 impl<'a> SortComponent<'a> for BubbleSort<'a> {
+    fn as_str(&self) -> &'a str {
+        "BubbleSort"
+    }
     fn shuffle(&mut self, len: usize) {
         (self.i, self.j) = (0, 1);
         self.data = gen_rand_data(len);

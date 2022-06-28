@@ -35,7 +35,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         )
         .split(chunks[1]);
 
-    let menu = Paragraph::new(Span::raw(app.sort_method.as_str()))
+    let menu = Paragraph::new(Span::raw(app.sort_component.as_str()))
         .block(
             Block::default()
                 .title("[S]ort Method")
@@ -95,7 +95,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
 
     let pointer = app.sort_component.get_pointer();
 
-    let barchart = BarChart::default()
+    let ptr_chart = BarChart::default()
         .block(
             Block::default()
                 .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
@@ -114,7 +114,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
         .bar_gap(1)
         .bar_style(Style::default().fg(Color::Green))
         .value_style(Style::default().bg(Color::Green));
-    f.render_widget(barchart, graph[1]);
+    f.render_widget(ptr_chart, graph[1]);
 
     f.render_widget(
         Paragraph::new(Span::raw(format!("Debug: {:#?}", app.sort_component.is_sort()))),
