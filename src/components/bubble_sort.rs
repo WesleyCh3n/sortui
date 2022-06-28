@@ -22,6 +22,7 @@ impl<'a> BubbleSort<'a> {
 
 impl<'a> SortComponent<'a> for BubbleSort<'a> {
     fn shuffle(&mut self, len: usize) {
+        (self.i, self.j) = (0, 1);
         self.data = gen_rand_data(len);
     }
     fn get_data(&self) -> Vec<(&'a str, u64)> {
@@ -52,8 +53,11 @@ impl<'a> SortComponent<'a> for BubbleSort<'a> {
     }
     fn get_pointer(&self) -> Vec<(&'a str, u64)> {
         let mut pointer = vec![("", 0); self.data.len()];
+        let len = self.data.len();
+        pointer[self.j].0 = "j";
         pointer[self.j].1 = 1;
-        if self.j > 0 {
+        if self.j > 0 && self.j < len {
+            pointer[self.j - 1].0 = "j";
             pointer[self.j - 1].1 = 1;
         }
         pointer

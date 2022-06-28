@@ -24,6 +24,7 @@ impl<'a> SelectionSort<'a> {
 
 impl<'a> SortComponent<'a> for SelectionSort<'a> {
     fn shuffle(&mut self, len: usize) {
+        (self.i, self.j, self.tmp_index) = (0,1,0);
         self.data = gen_rand_data(len);
     }
     fn get_data(&self) -> Vec<(&'a str, u64)> {
@@ -57,11 +58,11 @@ impl<'a> SortComponent<'a> for SelectionSort<'a> {
         if self.i == 0 && self.j == 1 {
             self.tmp_index = self.i;
         }
-        if self.j >= len - 1 {
+        if self.j >= len {
             self.data.swap(self.i, self.tmp_index);
-            self.tmp_index = self.i;
             self.j = self.i + 1;
             self.i += 1;
+            self.tmp_index = self.i;
             return;
         }
 
@@ -73,8 +74,19 @@ impl<'a> SortComponent<'a> for SelectionSort<'a> {
     }
     fn get_pointer(&self) -> Vec<(&'a str, u64)> {
         let mut pointer = vec![("", 0); self.data.len()];
-        pointer[self.i].1 = 1;
-        pointer[self.j].1 = 1;
+        let len = self.data.len();
+        if self.tmp_index < len {
+            pointer[self.tmp_index].0 = "tmp";
+            pointer[self.tmp_index].1 = 1;
+        }
+        if self.i < len {
+            pointer[self.i].0 = "i";
+            pointer[self.i].1 = 1;
+        }
+        if self.j < len {
+            pointer[self.j].0 = "j";
+            pointer[self.j].1 = 1;
+        }
         pointer
     }
 }
