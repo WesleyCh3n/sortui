@@ -8,7 +8,8 @@ use tui::{backend::Backend, Terminal};
 
 use crate::{
     components::{
-        bubble_sort::BubbleSort, selection_sort::SelectionSort, SortComponent,
+        bubble_sort::BubbleSort, insertion_sort::InsertionSort,
+        selection_sort::SelectionSort, SortComponent,
     },
     ui::ui,
 };
@@ -27,7 +28,7 @@ pub struct App<'a> {
 impl App<'static> {
     pub fn new() -> App<'static> {
         App {
-            sort_component: Box::new(BubbleSort::new(200)),
+            sort_component: Box::new(BubbleSort::new(45)),
 
             sort_popup: false,
             len_popup: false,
@@ -50,7 +51,7 @@ impl App<'static> {
                 if self.sort_component.is_sort() {
                     return Ok(());
                 }
-                self.sort_component.sort();
+                self.sort_component.iter();
             }
             KeyCode::Char('r') => {
                 let len = self.sort_component.get_data_len();
@@ -104,7 +105,7 @@ impl App<'static> {
                 self.auto = false;
                 return Ok(());
             }
-            self.sort_component.sort();
+            self.sort_component.iter();
         }
         Ok(())
     }
@@ -135,12 +136,11 @@ impl App<'static> {
                             KeyCode::Char('3') => {
                                 let len = self.sort_component.get_data_len();
                                 self.sort_component =
-                                    Box::new(SelectionSort::new(len));
+                                    Box::new(InsertionSort::new(len));
                             }
-                            _ => {
-                                self.sort_popup = false;
-                            }
+                            _ => {}
                         }
+                        self.sort_popup = false;
                     } else if self.len_popup {
                     } else if self.tick_popup {
                     } else {

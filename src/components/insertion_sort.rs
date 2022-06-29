@@ -10,17 +10,17 @@ impl Default for Pointer {
     }
 }
 
-pub struct BubbleSort {
+pub struct InsertionSort {
     iterator: Box<dyn Iterator<Item = (Vec<u64>, Pointer)>>,
     data: Vec<u64>,
     ptr: Pointer,
     is_done: bool,
 }
 
-impl<'a> BubbleSort {
+impl<'a> InsertionSort {
     pub fn new(len: usize) -> Self {
         let data = gen_rand_vec(len);
-        BubbleSort {
+        InsertionSort {
             data: data.clone(),
             iterator: iterator(data),
             ptr: Pointer(0, 0),
@@ -29,9 +29,9 @@ impl<'a> BubbleSort {
     }
 }
 
-impl<'a> SortComponent<'a> for BubbleSort {
+impl<'a> SortComponent<'a> for InsertionSort {
     fn as_str(&self) -> &'a str {
-        "BubbleSort"
+        "IntsertionSort"
     }
     fn shuffle(&mut self, len: usize) {
         self.ptr = Pointer::default();
@@ -62,7 +62,7 @@ impl<'a> SortComponent<'a> for BubbleSort {
         let mut ptr = vec![("", 0); len];
         ptr[self.ptr.0].0 = "i";
         ptr[self.ptr.0].1 = 1;
-        ptr[self.ptr.1].0 = "i";
+        ptr[self.ptr.1].0 = "j";
         ptr[self.ptr.1].1 = 1;
         ptr
     }
@@ -81,24 +81,14 @@ fn iterator(
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
     Box::new(
         gen!({
-            for i in 0..data.len() {
-                for j in 0..data.len() - 1 - i {
-                    if data[j] > data[j + 1] {
-                        data.swap(j, j + 1);
-                    }
-                    yield_!((data.clone(), Pointer(j, j + 1))); // Suspend a function at any point with a value.
+            for i in 1..data.len() {
+                let mut j = i;
+                while j > 0 && data[j - 1] > data[j] {
+                    data.swap(j - 1, j);
+                    j -= 1;
+                    yield_!((data.clone(), Pointer(i, j)));
                 }
             }
-            /* let mut swapped = true;
-            while swapped {
-                swapped = false;
-                for i in 1..data.len() {
-                    if data[i - 1] > data[i] {
-                        data.swap(i - 1, i);
-                        swapped = true;
-                    }
-                }
-            } */
         })
         .into_iter(),
     )

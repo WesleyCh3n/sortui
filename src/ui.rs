@@ -113,17 +113,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .split(chunks[2]);
 
     let data = app.sort_component.get_data();
+    let bar_style = Style::default().fg(if app.sort_component.is_sort() {
+        Color::Green
+    } else {
+        Color::Yellow
+    });
     let barchart = BarChart::default()
         .block(
             Block::default()
                 .title(Spans::from(Span::styled(
                     "Graph",
                     Style::default()
-                        .fg(if app.auto {
-                            Color::Blue
-                        } else {
-                            Color::Cyan
-                        })
+                        .fg(if app.auto { Color::Blue } else { Color::Cyan })
                         .add_modifier(Modifier::BOLD),
                 )))
                 .title_alignment(Alignment::Center)
@@ -142,8 +143,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .data(&data)
         .bar_width(1)
         .bar_gap(1)
-        .bar_style(Style::default().fg(Color::Yellow))
-        .value_style(Style::default().bg(Color::Yellow));
+        .bar_style(bar_style)
+        .value_style(bar_style);
     f.render_widget(barchart, graph[0]);
 
     let pointer = app.sort_component.get_pointer();
@@ -225,24 +226,26 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 pub fn popup_ui<B: Backend>(f: &mut Frame<B>) {
-    let items: Vec<ListItem> = vec!["BubbleSort", "SelectionSort"]
-        .iter()
-        .enumerate()
-        .map(|e| {
-            ListItem::new(Spans::from(vec![
-                Span::styled(
-                    format!("[{}] ", e.0),
-                    Style::default()
-                        .fg(Color::LightBlue)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("{}", e.1),
-                    Style::default().add_modifier(Modifier::BOLD),
-                ),
-            ]))
-        })
-        .collect();
+    let items: Vec<ListItem> =
+        vec!["BubbleSort", "SelectionSort", "InsertionSort"]
+            .iter()
+            .enumerate()
+            .map(|e| {
+                ListItem::new(Spans::from(vec![
+                    Span::styled(
+                        format!("[{}] ", e.0 + 1),
+                        Style::default()
+                            .fg(Color::LightBlue)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Span::styled(
+                        format!("{}", e.1),
+                        Style::default()
+                            .add_modifier(Modifier::BOLD | Modifier::ITALIC),
+                    ),
+                ]))
+            })
+            .collect();
 
     let sort_list = List::new(items)
         .block(
