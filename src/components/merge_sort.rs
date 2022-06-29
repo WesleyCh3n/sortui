@@ -2,13 +2,8 @@ use super::SortComponent;
 use crate::util::gen_rand_vec;
 use genawaiter::{rc::gen, yield_};
 
+#[derive(Default)]
 struct Pointer(usize, usize);
-
-impl Default for Pointer {
-    fn default() -> Self {
-        Self(0, 0)
-    }
-}
 
 pub struct MergeSort {
     iterator: Box<dyn Iterator<Item = (Vec<u64>, Pointer)>>,
@@ -110,6 +105,7 @@ fn iterator(
                                 index += 1;
                                 right += 1;
                             }
+                            yield_!((data.clone(), Pointer(i, i + index)));
                         }
 
                         // Copy the reset elements to returned array.
@@ -122,6 +118,7 @@ fn iterator(
                             ret[i..upper][index..]
                                 .copy_from_slice(&data[mid..upper][right..]);
                         }
+                        yield_!((data.clone(), Pointer(i, i + index)));
                     }
 
                     // Copy the merged result back to original array.
@@ -136,6 +133,7 @@ fn iterator(
                 }
                 width *= 2;
             }
+            yield_!((data.clone(), Pointer::default()));
         })
         .into_iter(),
     )
