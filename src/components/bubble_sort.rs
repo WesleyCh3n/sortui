@@ -2,13 +2,8 @@ use super::SortComponent;
 use crate::util::gen_rand_vec;
 use genawaiter::{rc::gen, yield_};
 
+#[derive(Default)]
 struct Pointer(usize, usize);
-
-impl Default for Pointer {
-    fn default() -> Self {
-        Self(0, 0)
-    }
-}
 
 pub struct BubbleSort {
     iterator: Box<dyn Iterator<Item = (Vec<u64>, Pointer)>>,
