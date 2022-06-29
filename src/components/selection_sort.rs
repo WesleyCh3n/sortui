@@ -55,7 +55,6 @@ impl<'a> SortComponent<'a> for SelectionSort {
     fn is_sort(&self) -> bool {
         self.is_done
     }
-    fn sort(&mut self) {}
 
     fn get_pointer(&self) -> Vec<(&'a str, u64)> {
         let len = self.data.len();
@@ -90,11 +89,11 @@ fn iterator(
                     if data[temp] > data[j] {
                         temp = j;
                     }
-                    yield_!((data.clone(), Pointer(i, j, temp))); // Suspend a function at any point with a value.
+                    yield_!((data.clone(), Pointer(i, j, temp)));
                 }
                 data.swap(i, temp);
             }
-            yield_!((data.clone(), Pointer(0, 0, 0))); // Suspend a function at any point with a value.
+            yield_!((data.clone(), Pointer(0, 0, 0)));
         })
         .into_iter(),
     )

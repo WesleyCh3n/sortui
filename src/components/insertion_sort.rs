@@ -55,7 +55,6 @@ impl<'a> SortComponent<'a> for InsertionSort {
     fn is_sort(&self) -> bool {
         self.is_done
     }
-    fn sort(&mut self) {}
 
     fn get_pointer(&self) -> Vec<(&'a str, u64)> {
         let len = self.data.len();

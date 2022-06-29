@@ -55,7 +55,6 @@ impl<'a> SortComponent<'a> for BubbleSort {
     fn is_sort(&self) -> bool {
         self.is_done
     }
-    fn sort(&mut self) {}
 
     fn get_pointer(&self) -> Vec<(&'a str, u64)> {
         let len = self.data.len();
@@ -86,7 +85,7 @@ fn iterator(
                     if data[j] > data[j + 1] {
                         data.swap(j, j + 1);
                     }
-                    yield_!((data.clone(), Pointer(j, j + 1))); // Suspend a function at any point with a value.
+                    yield_!((data.clone(), Pointer(j, j + 1)));
                 }
             }
             /* let mut swapped = true;

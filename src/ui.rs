@@ -5,7 +5,7 @@ use tui::{
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{
-        self, BarChart, Block, BorderType, Borders, Clear, List, ListItem,
+        BarChart, Block, BorderType, Borders, Clear, List, ListItem,
         Paragraph,
     },
     Frame,
@@ -180,7 +180,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         chunks[3],
     );
 
-    f.render_widget(
+    /* f.render_widget(
         Paragraph::new(Span::raw(format!(
             "Debug: fsize: {:?} vec: {:?}",
             f.size(),
@@ -192,7 +192,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )))
         .wrap(widgets::Wrap { trim: false }),
         chunks[4],
-    );
+    ); */
 
     if app.sort_popup {
         popup_ui(f);
@@ -227,7 +227,7 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 pub fn popup_ui<B: Backend>(f: &mut Frame<B>) {
     let items: Vec<ListItem> =
-        vec!["BubbleSort", "SelectionSort", "InsertionSort"]
+        vec!["BubbleSort", "SelectionSort", "InsertionSort", "MergeSort"]
             .iter()
             .enumerate()
             .map(|e| {
