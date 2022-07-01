@@ -5,8 +5,7 @@ use tui::{
     style::{Color, Modifier, Style},
     text::{Span, Spans},
     widgets::{
-        BarChart, Block, BorderType, Borders, Clear, List, ListItem,
-        Paragraph,
+        BarChart, Block, BorderType, Borders, Clear, List, ListItem, Paragraph,
     },
     Frame,
 };
@@ -226,26 +225,31 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 pub fn popup_ui<B: Backend>(f: &mut Frame<B>) {
-    let items: Vec<ListItem> =
-        vec!["BubbleSort", "SelectionSort", "InsertionSort", "MergeSort"]
-            .iter()
-            .enumerate()
-            .map(|e| {
-                ListItem::new(Spans::from(vec![
-                    Span::styled(
-                        format!("[{}] ", e.0 + 1),
-                        Style::default()
-                            .fg(Color::LightBlue)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(
-                        format!("{}", e.1),
-                        Style::default()
-                            .add_modifier(Modifier::BOLD | Modifier::ITALIC),
-                    ),
-                ]))
-            })
-            .collect();
+    let items: Vec<ListItem> = vec![
+        "BubbleSort",
+        "SelectionSort",
+        "InsertionSort",
+        "MergeSort",
+        "QuickSort",
+    ]
+    .iter()
+    .enumerate()
+    .map(|e| {
+        ListItem::new(Spans::from(vec![
+            Span::styled(
+                format!("[{}] ", e.0 + 1),
+                Style::default()
+                    .fg(Color::LightBlue)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                format!("{}", e.1),
+                Style::default()
+                    .add_modifier(Modifier::BOLD | Modifier::ITALIC),
+            ),
+        ]))
+    })
+    .collect();
 
     let sort_list = List::new(items)
         .block(

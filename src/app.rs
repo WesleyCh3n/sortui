@@ -9,7 +9,8 @@ use tui::{backend::Backend, Terminal};
 use crate::{
     components::{
         bubble_sort::BubbleSort, insertion_sort::InsertionSort,
-        selection_sort::SelectionSort, SortComponent, merge_sort::MergeSort,
+        merge_sort::MergeSort, quick_sort::QuickSort,
+        selection_sort::SelectionSort, SortComponent,
     },
     ui::ui,
 };
@@ -142,6 +143,11 @@ impl App<'static> {
                                 let len = self.sort_component.get_data_len();
                                 self.sort_component =
                                     Box::new(MergeSort::new(len));
+                            }
+                            KeyCode::Char('5') => {
+                                let len = self.sort_component.get_data_len();
+                                self.sort_component =
+                                    Box::new(QuickSort::new(len));
                             }
                             _ => {}
                         }

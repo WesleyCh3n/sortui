@@ -1,6 +1,6 @@
 use super::SortComponent;
 use crate::util::gen_rand_vec;
-use genawaiter::{sync::gen, yield_};
+use genawaiter::{sync::{gen, Gen, GenBoxed}, yield_};
 
 #[derive(Default)]
 struct Pointer(usize, usize);
@@ -14,10 +14,10 @@ pub struct QuickSort {
 
 impl<'a> QuickSort {
     pub fn new(len: usize) -> Self {
-        let data = gen_rand_vec(len);
+        // let mut data = gen_rand_vec(len);
         QuickSort {
-            data: data.clone(),
-            iterator: iterator(data),
+            data: gen_rand_vec(len),
+            iterator: iterator(&mut gen_rand_vec(len), 1, len - 1),
             ptr: Pointer(0, 0),
             is_done: false,
         }
@@ -26,13 +26,14 @@ impl<'a> QuickSort {
 
 impl<'a> SortComponent<'a> for QuickSort {
     fn as_str(&self) -> &'a str {
-        "MergeSort"
+        "QuickSort"
     }
     fn shuffle(&mut self, len: usize) {
         self.ptr = Pointer::default();
-        let data = gen_rand_vec(len);
+        let mut data = gen_rand_vec(len);
         self.data = data.clone();
-        self.iterator = iterator(data);
+        self.iterator = iterator(&mut data, 1, len - 1);
+        let a = countdown(3).into_iter().next();
         self.is_done = false;
     }
     fn get_data(&self) -> Vec<(&'a str, u64)> {
@@ -64,6 +65,7 @@ impl<'a> SortComponent<'a> for QuickSort {
         if let Some((data, ptr)) = self.iterator.next() {
             self.data = data;
             self.ptr = ptr;
+            println!("{} {}", self.ptr.0, self.ptr.1);
         } else {
             self.is_done = true;
         }
@@ -71,17 +73,66 @@ impl<'a> SortComponent<'a> for QuickSort {
 }
 
 fn iterator(
-    mut data: Vec<u64>,
-) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
+    mut data: &mut Vec<u64>,
+    high: usize,
+    low: usize,
+) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)> + '_> {
     Box::new(
         gen!({
-            async fn foo(arr: &mut [u64]) {
-                yield_!((arr, Pointer(0, 0)));
+            if low < high {
+                let p = partition(&mut data, low, high, &|a, b| a <= b);
+                iterator(data, low, p - 1);
+                yield_!((data.clone(), Pointer::default()));
+                iterator(data, p + 1, high);
+                yield_!((data.clone(), Pointer::default()));
             }
-
-            foo(&mut data[..]);
-            yield_!((data, Pointer(0, 0)));
         })
         .into_iter(),
     )
+}
+
+fn countdown(start: i32) -> GenBoxed<i32> {
+    Gen::new_boxed(|co| {
+        async move {
+            if start == 0 {
+                return;
+            }
+
+            co.yield_(start).await;
+
+            for n in countdown(start - 1) {
+                co.yield_(n).await;
+            }
+        }
+    })
+}
+
+fn partition<F: Fn(&u64, &u64) -> bool>(
+    arr: &mut Vec<u64>,
+    low: usize,
+    high: usize,
+    f: &F,
+) -> usize {
+    let pivot = match arr.get(high) {
+        Some(v) => v.clone(),
+        _ => {
+            panic!("Array index {:?} out of bounds", high)
+        }
+    };
+    let mut i = low;
+    for j in low..high - 1 {
+        match arr.to_vec().get(j) {
+            Some(v) => {
+                if f(v, &pivot) {
+                    &arr.swap(i, j);
+                    i += 1;
+                }
+            }
+            _ => {
+                panic!("Array index {:?} for j out of bounds", j)
+            }
+        }
+    }
+    &arr.swap(i, high);
+    i
 }
