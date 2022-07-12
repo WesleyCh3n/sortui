@@ -73,17 +73,14 @@ impl<'a> SortComponent<'a> for InsertionSort {
 fn iterator(
     mut data: Vec<u64>,
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
-    Box::new(
-        gen!({
-            for i in 1..data.len() {
-                let mut j = i;
-                while j > 0 && data[j - 1] > data[j] {
-                    data.swap(j - 1, j);
-                    j -= 1;
-                    yield_!((data.clone(), Pointer(i, j)));
-                }
-            }
-        })
-        .into_iter(),
-    )
+    let mut result = vec![];
+    for i in 1..data.len() {
+        let mut j = i;
+        while j > 0 && data[j - 1] > data[j] {
+            data.swap(j - 1, j);
+            j -= 1;
+            result.push((data.clone(), Pointer(i, j)));
+        }
+    }
+    Box::new(result.into_iter())
 }

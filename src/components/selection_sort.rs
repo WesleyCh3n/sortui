@@ -75,21 +75,18 @@ impl<'a> SortComponent<'a> for SelectionSort {
 fn iterator(
     mut data: Vec<u64>,
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
-    Box::new(
-        gen!({
-            let len = data.len();
-            for i in 0..len {
-                let mut temp = i;
-                for j in (i + 1)..len {
-                    if data[temp] > data[j] {
-                        temp = j;
-                    }
-                    yield_!((data.clone(), Pointer(i, j, temp)));
-                }
-                data.swap(i, temp);
+    let mut result = vec![];
+    let len = data.len();
+    for i in 0..len {
+        let mut temp = i;
+        for j in (i + 1)..len {
+            if data[temp] > data[j] {
+                temp = j;
             }
-            yield_!((data.clone(), Pointer(0, 0, 0)));
-        })
-        .into_iter(),
-    )
+            result.push((data.clone(), Pointer(i, j, temp)));
+        }
+        data.swap(i, temp);
+    }
+    result.push((data.clone(), Pointer(0, 0, 0)));
+    Box::new(result.into_iter())
 }

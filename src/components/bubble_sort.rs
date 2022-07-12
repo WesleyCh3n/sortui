@@ -1,6 +1,5 @@
 use super::SortComponent;
 use crate::util::gen_rand_vec;
-use genawaiter::{rc::gen, yield_};
 
 #[derive(Default)]
 struct Pointer(usize, usize);
@@ -73,27 +72,14 @@ impl<'a> SortComponent<'a> for BubbleSort {
 fn iterator(
     mut data: Vec<u64>,
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
-    Box::new(
-        gen!({
-            for i in 0..data.len() {
-                for j in 0..data.len() - 1 - i {
-                    if data[j] > data[j + 1] {
-                        data.swap(j, j + 1);
-                    }
-                    yield_!((data.clone(), Pointer(j, j + 1)));
-                }
+    let mut result = vec![];
+    for i in 0..data.len() {
+        for j in 0..data.len() - 1 - i {
+            if data[j] > data[j + 1] {
+                data.swap(j, j + 1);
             }
-            /* let mut swapped = true;
-            while swapped {
-                swapped = false;
-                for i in 1..data.len() {
-                    if data[i - 1] > data[i] {
-                        data.swap(i - 1, i);
-                        swapped = true;
-                    }
-                }
-            } */
-        })
-        .into_iter(),
-    )
+            result.push((data.clone(), Pointer(j, j + 1)));
+        }
+    }
+    Box::new(result.into_iter())
 }
