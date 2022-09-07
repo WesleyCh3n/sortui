@@ -19,6 +19,7 @@ pub struct App<'a> {
     pub sort_popup: bool,
     pub len_popup: bool,
     pub tick_popup: bool,
+    pub first_open: bool,
     pub auto: bool,
     pub tick_rate: u64,
     pub is_quit: bool,
@@ -35,8 +36,10 @@ impl App<'static> {
             len_popup: false,
             tick_popup: false,
 
+            first_open: true,
+
             auto: false,
-            tick_rate: 20,
+            tick_rate: 10,
 
             is_quit: false,
             fwidth: 0,
@@ -54,7 +57,7 @@ impl App<'static> {
                 }
                 self.sort_component.iter();
             }
-            KeyCode::Char('r') => {
+            KeyCode::Char('r') | KeyCode::Char('R') => {
                 let len = self.sort_component.get_data_len();
                 self.sort_component.shuffle(len);
             }

@@ -15,17 +15,20 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     if app.sort_component.get_data_len() > (size.width as usize - 4) / 2 {
         app.sort_component.shuffle((size.width as usize - 4) / 2);
     }
+    if app.first_open {
+        app.first_open = false;
+        app.sort_component.shuffle((size.width as usize - 4) / 2);
+    }
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
         .constraints(
             [
-                Constraint::Percentage(25),
-                Constraint::Length(3),
-                Constraint::Percentage(40),
-                Constraint::Length(1),
-                Constraint::Percentage(27),
+                Constraint::Percentage(15), // top margin
+                Constraint::Length(3),      // top widgets
+                Constraint::Percentage(55), // barchart
+                Constraint::Length(1),      // bottom hint
             ]
             .as_ref(),
         )
