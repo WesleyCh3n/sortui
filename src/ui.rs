@@ -1,12 +1,11 @@
+use crate::components::barchart::BarChart;
 use crate::App;
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{
-        BarChart, Block, BorderType, Borders, Clear, List, ListItem, Paragraph,
-    },
+    widgets::{Block, BorderType, Borders, Clear, List, ListItem, Paragraph},
     Frame,
 };
 
@@ -103,14 +102,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .alignment(Alignment::Center);
     f.render_widget(menu, menus[2]);
 
-    let graph = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(0)
-        .constraints(
-            [Constraint::Percentage(83), Constraint::Percentage(17)].as_ref(),
-        )
-        .split(chunks[2]);
-
     let data = app.sort_component.get_data();
     let bar_style = Style::default().fg(if app.sort_component.is_sort() {
         Color::Green
@@ -127,7 +118,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                         .add_modifier(Modifier::BOLD),
                 )))
                 .title_alignment(Alignment::Center)
-                .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+                .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(if app.auto {
                     Color::Blue
@@ -144,31 +135,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .bar_gap(1)
         .bar_style(bar_style)
         .value_style(bar_style);
-    f.render_widget(barchart, graph[0]);
-
-    let pointer = app.sort_component.get_pointer();
-
-    let ptr_chart = BarChart::default()
-        .block(
-            Block::default()
-                .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(if app.auto {
-                    Color::Blue
-                } else {
-                    if app.sort_component.is_sort() {
-                        Color::Green
-                    } else {
-                        Color::Reset
-                    }
-                })),
-        )
-        .data(&pointer)
-        .bar_width(1)
-        .bar_gap(1)
-        .bar_style(Style::default().fg(Color::Green))
-        .value_style(Style::default().bg(Color::Green));
-    f.render_widget(ptr_chart, graph[1]);
+    f.render_widget(barchart, chunks[2]);
 
     f.render_widget(
         Paragraph::new(Span::styled(
@@ -178,20 +145,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .alignment(Alignment::Left),
         chunks[3],
     );
-
-    /* f.render_widget(
-        Paragraph::new(Span::raw(format!(
-            "Debug: fsize: {:?} vec: {:?}",
-            f.size(),
-            app.sort_component
-                .get_data()
-                .iter()
-                .map(|e| { e.1 })
-                .collect::<Vec<u64>>()
-        )))
-        .wrap(widgets::Wrap { trim: false }),
-        chunks[4],
-    ); */
 
     if app.sort_popup {
         popup_ui(f);

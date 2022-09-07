@@ -1,6 +1,8 @@
+#![allow(unused_mut)] // TODO: remove this
+use tui::style::{Color, Style};
+
 use super::SortComponent;
 use crate::util::gen_rand_vec;
-use genawaiter::{sync::{gen, Gen, GenBoxed}, yield_};
 
 #[derive(Default)]
 struct Pointer(usize, usize);
@@ -35,14 +37,18 @@ impl<'a> SortComponent<'a> for QuickSort {
         self.iterator = iterator(data, 1, len - 1);
         self.is_done = false;
     }
-    fn get_data(&self) -> Vec<(&'a str, u64)> {
-        self.data
-            .to_vec()
-            .iter()
-            .fold(Vec::new(), |mut data, value| {
-                data.push(("", *value));
-                data
-            })
+    fn get_data(&self) -> Vec<(&'a str, u64, Option<Style>)> {
+        let mut data =
+            self.data
+                .to_vec()
+                .iter()
+                .fold(Vec::new(), |mut data, value| {
+                    data.push(("", *value, None));
+                    data
+                });
+        data[self.ptr.0].2 = Some(Style::default().fg(Color::LightRed));
+        data[self.ptr.1].2 = Some(Style::default().fg(Color::LightRed));
+        data
     }
     fn get_data_len(&self) -> usize {
         self.data.len()
@@ -51,15 +57,6 @@ impl<'a> SortComponent<'a> for QuickSort {
         self.is_done
     }
 
-    fn get_pointer(&self) -> Vec<(&'a str, u64)> {
-        let len = self.data.len();
-        let mut ptr = vec![("", 0); len];
-        ptr[self.ptr.0].0 = "s";
-        ptr[self.ptr.0].1 = 1;
-        ptr[self.ptr.1].0 = "m";
-        ptr[self.ptr.1].1 = 1;
-        ptr
-    }
     fn iter(&mut self) {
         if let Some((data, ptr)) = self.iterator.next() {
             self.data = data;
@@ -71,14 +68,12 @@ impl<'a> SortComponent<'a> for QuickSort {
     }
 }
 
+#[allow(unused)]
 fn iterator(
     mut data: Vec<u64>,
     high: usize,
     low: usize,
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
-    Box::new(
-        gen!({
-        })
-        .into_iter(),
-    )
+    // Box::new(vec![].into_iter());
+    unimplemented!()
 }
