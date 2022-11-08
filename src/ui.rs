@@ -1,5 +1,5 @@
 use crate::components::barchart::BarChart;
-use crate::App;
+use crate::AppState;
 use tui::{
     backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -9,14 +9,15 @@ use tui::{
     Frame,
 };
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut AppState) {
     let size = f.size();
-    app.fwidth = (size.width as usize - 4) / 2;
+    app.ui_state.width = (size.width as usize - 4) / 2;
     if app.sort_component.get_data_len() > (size.width as usize - 4) / 2 {
         app.sort_component.shuffle((size.width as usize - 4) / 2);
     }
-    if app.first_open {
-        app.first_open = false;
+    // fill up the data to match the ui width
+    if app.ui_state.first_time {
+        app.ui_state.first_time = false;
         app.sort_component.shuffle((size.width as usize - 4) / 2);
     }
 
@@ -48,7 +49,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     // SortMethod
     let auto_lambda = |c| {
-        if app.auto {
+        if app.is_auto_sorting {
             Color::Gray
         } else {
             c
@@ -117,13 +118,17 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .title(Spans::from(Span::styled(
                     "Graph",
                     Style::default()
-                        .fg(if app.auto { Color::Blue } else { Color::Cyan })
+                        .fg(if app.is_auto_sorting {
+                            Color::Blue
+                        } else {
+                            Color::Cyan
+                        })
                         .add_modifier(Modifier::BOLD),
                 )))
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(if app.auto {
+                .border_style(Style::default().fg(if app.is_auto_sorting {
                     Color::Blue
                 } else {
                     if app.sort_component.is_sort() {
@@ -142,15 +147,17 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
     f.render_widget(
         Paragraph::new(Span::styled(
-            "Enter: start/stop sorting, Space: next step, R: shuffle data",
+            "[Enter]: start/stop sorting, [Space]: next step, [R]: shuffle data",
             Style::default().fg(Color::LightBlue),
         ))
         .alignment(Alignment::Left),
         chunks[3],
     );
 
-    if app.sort_popup {
-        popup_ui(f);
+    if let Some(s) = &app.ui_state.popup {
+        match s {
+            crate::app::PopUp::SortAlgo => popup_ui(f),
+        }
     }
 }
 

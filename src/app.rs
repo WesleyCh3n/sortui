@@ -3,93 +3,82 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyCode};
 use tui::{backend::Backend, Terminal};
 
 use crate::{
-    components::{
-        bubble_sort::BubbleSort, insertion_sort::InsertionSort,
-        merge_sort::MergeSort, quick_sort::QuickSort,
-        selection_sort::SelectionSort, SortComponent,
-    },
+    components::{bubble_sort::BubbleSort, SortComponent},
     ui::ui,
 };
 
-pub struct App<'a> {
-    pub sort_popup: bool,
-    pub len_popup: bool,
-    pub tick_popup: bool,
-    pub first_open: bool,
-    pub auto: bool,
+pub enum PopUp {
+    SortAlgo,
+}
+
+pub struct UiState {
+    pub width: usize,
+    pub first_time: bool,
+    pub popup: Option<PopUp>,
+}
+
+pub struct AppState<'a> {
+    pub is_auto_sorting: bool,
     pub tick_rate: u64,
     pub is_quit: bool,
     pub sort_component: Box<dyn SortComponent<'a>>,
-    pub fwidth: usize,
+    pub ui_state: UiState,
 }
 
-impl App<'static> {
-    pub fn new() -> App<'static> {
-        App {
+impl AppState<'static> {
+    pub fn new() -> AppState<'static> {
+        AppState {
             sort_component: Box::new(BubbleSort::new(45)),
 
-            sort_popup: false,
-            len_popup: false,
-            tick_popup: false,
-
-            first_open: true,
-
-            auto: false,
+            is_auto_sorting: false,
             tick_rate: 10,
 
             is_quit: false,
-            fwidth: 0,
+            ui_state: UiState {
+                width: 0,
+                first_time: true,
+                popup: None,
+            },
         }
     }
+}
 
-    pub fn event(&mut self, key: KeyEvent) -> io::Result<()> {
-        match key.code {
-            KeyCode::Char('q') => self.is_quit = true,
-            KeyCode::Enter => self.auto = true,
-            KeyCode::Char('s') => self.sort_popup = !self.sort_popup,
-            KeyCode::Char(' ') => {
-                if self.sort_component.is_sort() {
-                    return Ok(());
+impl AppState<'_> {
+    pub fn run<B: Backend>(
+        &mut self,
+        terminal: &mut Terminal<B>,
+    ) -> io::Result<()> {
+        loop {
+            // drawing the ui
+            terminal.draw(|f| ui(f, self))?;
+
+            // handle input event
+            match self.is_auto_sorting {
+                true => self.run_auto_sort()?,
+                false => {
+                    if let Event::Key(key) = event::read()? {
+                        self.input_handler(key.code)?
+                    }
                 }
-                self.sort_component.iter();
             }
-            KeyCode::Char('r') | KeyCode::Char('R') => {
-                let len = self.sort_component.get_data_len();
-                self.sort_component.shuffle(len);
+
+            // quit the program
+            if self.is_quit {
+                break;
             }
-            KeyCode::Char('k') => {
-                let len = self.sort_component.get_data_len() + 1;
-                if len > self.fwidth {
-                    return Ok(());
-                }
-                self.sort_component.shuffle(len);
-            }
-            KeyCode::Char('j') => {
-                let len = self.sort_component.get_data_len() - 1;
-                if len < 2 {
-                    return Ok(());
-                }
-                self.sort_component.shuffle(len);
-            }
-            KeyCode::Char('l') => {
-                self.tick_rate += 5;
-            }
-            KeyCode::Char('h') => {
-                if self.tick_rate == 0 {
-                    return Ok(());
-                }
-                self.tick_rate -= 5;
-            }
-            _ => {}
         }
         Ok(())
     }
 
-    pub fn auto_event(&mut self) -> io::Result<()> {
+    pub fn quit(&mut self) {
+        self.is_quit = true;
+    }
+
+    pub fn run_auto_sort(&mut self) -> io::Result<()> {
         let last_tick = Instant::now();
         let tick_rate = Duration::from_millis(self.tick_rate);
         let timeout = tick_rate
@@ -98,74 +87,18 @@ impl App<'static> {
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
-                    KeyCode::Char('q') => self.is_quit = true,
-                    KeyCode::Enter => self.auto = false,
+                    KeyCode::Char('q') => self.quit(),
+                    KeyCode::Enter => self.is_auto_sorting = false,
                     _ => {}
                 }
             }
         }
         if last_tick.elapsed() >= tick_rate {
             if self.sort_component.is_sort() {
-                self.auto = false;
+                self.is_auto_sorting = false;
                 return Ok(());
             }
             self.sort_component.iter();
-        }
-        Ok(())
-    }
-
-    pub fn run<B: Backend>(
-        &mut self,
-        terminal: &mut Terminal<B>,
-    ) -> io::Result<()> {
-        loop {
-            terminal.draw(|f| ui(f, self))?;
-
-            if self.auto {
-                self.auto_event()?
-            } else {
-                if let Event::Key(key) = event::read()? {
-                    if self.sort_popup {
-                        match key.code {
-                            KeyCode::Char('1') => {
-                                let len = self.sort_component.get_data_len();
-                                self.sort_component =
-                                    Box::new(BubbleSort::new(len));
-                            }
-                            KeyCode::Char('2') => {
-                                let len = self.sort_component.get_data_len();
-                                self.sort_component =
-                                    Box::new(SelectionSort::new(len));
-                            }
-                            KeyCode::Char('3') => {
-                                let len = self.sort_component.get_data_len();
-                                self.sort_component =
-                                    Box::new(InsertionSort::new(len));
-                            }
-                            KeyCode::Char('4') => {
-                                let len = self.sort_component.get_data_len();
-                                self.sort_component =
-                                    Box::new(MergeSort::new(len));
-                            }
-                            KeyCode::Char('5') => {
-                                let len = self.sort_component.get_data_len();
-                                self.sort_component =
-                                    Box::new(QuickSort::new(len));
-                            }
-                            _ => {}
-                        }
-                        self.sort_popup = false;
-                    } else if self.len_popup {
-                    } else if self.tick_popup {
-                    } else {
-                        self.event(key)?
-                    }
-                }
-            }
-
-            if self.is_quit {
-                break;
-            }
         }
         Ok(())
     }

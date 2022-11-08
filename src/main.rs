@@ -1,5 +1,6 @@
 mod app;
 mod components;
+mod input_handler;
 mod ui;
 mod util;
 
@@ -14,7 +15,7 @@ use crossterm::{
 use std::{error::Error, io};
 use tui::{backend::CrosstermBackend, Terminal};
 
-use crate::app::App;
+use crate::app::AppState;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
@@ -25,7 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let mut app = App::new();
+    let mut app = AppState::new();
     let res = app.run(&mut terminal);
 
     // restore terminal
