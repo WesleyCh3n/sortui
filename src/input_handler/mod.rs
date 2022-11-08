@@ -16,34 +16,7 @@ impl AppState<'_> {
     pub fn input_handler(&mut self, key_code: KeyCode) -> io::Result<()> {
         match &self.ui_state.popup {
             Some(s) => {
-                match s {
-                    PopUp::SortAlgo => match key_code {
-                        KeyCode::Char('1') => {
-                            let len = self.sort_component.get_data_len();
-                            self.sort_component =
-                                Box::new(BubbleSort::new(len));
-                        }
-                        KeyCode::Char('2') => {
-                            let len = self.sort_component.get_data_len();
-                            self.sort_component =
-                                Box::new(SelectionSort::new(len));
-                        }
-                        KeyCode::Char('3') => {
-                            let len = self.sort_component.get_data_len();
-                            self.sort_component =
-                                Box::new(InsertionSort::new(len));
-                        }
-                        KeyCode::Char('4') => {
-                            let len = self.sort_component.get_data_len();
-                            self.sort_component = Box::new(MergeSort::new(len));
-                        }
-                        KeyCode::Char('5') => {
-                            let len = self.sort_component.get_data_len();
-                            self.sort_component = Box::new(QuickSort::new(len));
-                        }
-                        _ => {}
-                    },
-                }
+                self.key_pop(s.clone(), &key_code);
                 self.ui_state.popup = None;
             }
             None => match key_code {
@@ -92,5 +65,32 @@ impl AppState<'_> {
             },
         }
         Ok(())
+    }
+    pub fn key_pop(&mut self, popup_type: PopUp, key_code: &KeyCode) {
+        match popup_type {
+            PopUp::SortAlgo => match key_code {
+                KeyCode::Char('1') => {
+                    let len = self.sort_component.get_data_len();
+                    self.sort_component = Box::new(BubbleSort::new(len));
+                }
+                KeyCode::Char('2') => {
+                    let len = self.sort_component.get_data_len();
+                    self.sort_component = Box::new(SelectionSort::new(len));
+                }
+                KeyCode::Char('3') => {
+                    let len = self.sort_component.get_data_len();
+                    self.sort_component = Box::new(InsertionSort::new(len));
+                }
+                KeyCode::Char('4') => {
+                    let len = self.sort_component.get_data_len();
+                    self.sort_component = Box::new(MergeSort::new(len));
+                }
+                KeyCode::Char('5') => {
+                    let len = self.sort_component.get_data_len();
+                    self.sort_component = Box::new(QuickSort::new(len));
+                }
+                _ => {}
+            },
+        }
     }
 }

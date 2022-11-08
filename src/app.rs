@@ -11,6 +11,7 @@ use crate::{
     ui::ui,
 };
 
+#[derive(Clone)]
 pub enum PopUp {
     SortAlgo,
 }
