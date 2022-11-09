@@ -1,7 +1,6 @@
 use tui::style::{Color, Style};
 
-use super::SortComponent;
-use crate::util::gen_rand_vec;
+use super::{gen_rand_vec, SortComponent};
 
 #[derive(Default)]
 struct Pointer(usize, usize);

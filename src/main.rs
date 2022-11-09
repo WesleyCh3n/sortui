@@ -3,7 +3,6 @@ mod app;
 mod components;
 mod input_handler;
 mod ui;
-mod util;
 
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},

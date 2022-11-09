@@ -1,6 +1,5 @@
 use tui::style::Style;
 
-// pub mod barchart;
 pub mod bubble_sort;
 pub mod insertion_sort;
 pub mod merge_sort;
@@ -17,4 +16,15 @@ pub trait SortComponent<'a> {
     fn shuffle(&mut self, len: usize);
 
     fn iter(&mut self);
+}
+
+use rand::prelude::*;
+
+pub fn gen_rand_vec<'a>(n: usize) -> Vec<u64> {
+    let start = 5;
+    let mut values: Vec<u64> = (start..n as u64 + start).collect();
+    let mut rng = rand::thread_rng();
+    values.shuffle(&mut rng);
+
+    values
 }
