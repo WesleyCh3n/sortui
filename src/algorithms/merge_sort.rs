@@ -1,4 +1,3 @@
-#![allow(unused_mut)] // TODO: remove this
 use tui::style::{Color, Style};
 
 use super::{gen_rand_vec, SortComponent};
@@ -67,7 +66,6 @@ impl<'a> SortComponent<'a> for MergeSort {
     }
 }
 
-#[allow(unused)] // TODO: remove this
 fn iterator(
     mut data: Vec<u64>,
 ) -> Box<dyn Iterator<Item = (Vec<u64>, Pointer)>> {
