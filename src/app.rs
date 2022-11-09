@@ -3,11 +3,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use crossterm::event::{self, Event, KeyCode};
+use crossterm::event::{self, Event};
 use tui::{backend::Backend, Terminal};
 
 use crate::{
     components::{bubble_sort::BubbleSort, SortComponent},
+    input_handler::handle_key_event,
     ui::ui,
 };
 
@@ -59,10 +60,28 @@ impl AppState<'_> {
 
             // handle input event
             match self.is_auto_sorting {
-                true => self.run_auto_sort()?,
+                // auto mode
+                true => {
+                    let last_tick = Instant::now();
+                    if event::poll(Duration::from_millis(self.tick_rate))? {
+                        if let Event::Key(key) = event::read()? {
+                            handle_key_event(self, key.code)?;
+                        }
+                    }
+                    if last_tick.elapsed()
+                        >= Duration::from_millis(self.tick_rate)
+                    {
+                        if self.sort_component.is_sort() {
+                            self.is_auto_sorting = false;
+                        } else {
+                            self.sort_component.iter();
+                        }
+                    }
+                }
+                // normal mode
                 false => {
                     if let Event::Key(key) = event::read()? {
-                        self.input_handler(key.code)?
+                        handle_key_event(self, key.code)?
                     }
                 }
             }
@@ -74,33 +93,7 @@ impl AppState<'_> {
         }
         Ok(())
     }
-
     pub fn quit(&mut self) {
         self.is_quit = true;
-    }
-
-    pub fn run_auto_sort(&mut self) -> io::Result<()> {
-        let last_tick = Instant::now();
-        let tick_rate = Duration::from_millis(self.tick_rate);
-        let timeout = tick_rate
-            .checked_sub(last_tick.elapsed())
-            .unwrap_or_else(|| Duration::from_secs(0));
-        if event::poll(timeout)? {
-            if let Event::Key(key) = event::read()? {
-                match key.code {
-                    KeyCode::Char('q') => self.quit(),
-                    KeyCode::Enter => self.is_auto_sorting = false,
-                    _ => {}
-                }
-            }
-        }
-        if last_tick.elapsed() >= tick_rate {
-            if self.sort_component.is_sort() {
-                self.is_auto_sorting = false;
-                return Ok(());
-            }
-            self.sort_component.iter();
-        }
-        Ok(())
     }
 }

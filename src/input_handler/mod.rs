@@ -12,85 +12,92 @@ use crate::{
     AppState,
 };
 
-impl AppState<'_> {
-    pub fn input_handler(&mut self, key_code: KeyCode) -> io::Result<()> {
-        match &self.ui_state.popup {
-            Some(s) => {
-                self.key_pop(s.clone(), &key_code);
-                self.ui_state.popup = None;
+pub fn handle_key_event(
+    app: &mut AppState,
+    key_code: KeyCode,
+) -> io::Result<()> {
+    if app.is_auto_sorting {
+        match key_code {
+            KeyCode::Char('q') => app.quit(),
+            KeyCode::Enter => app.is_auto_sorting = false,
+            _ => {}
+        }
+        return Ok(());
+    }
+
+    match &app.ui_state.popup {
+        Some(s) => {
+            match s {
+                PopUp::SortAlgo => match key_code {
+                    KeyCode::Char('1') => {
+                        let len = app.sort_component.get_data_len();
+                        app.sort_component = Box::new(BubbleSort::new(len));
+                    }
+                    KeyCode::Char('2') => {
+                        let len = app.sort_component.get_data_len();
+                        app.sort_component = Box::new(SelectionSort::new(len));
+                    }
+                    KeyCode::Char('3') => {
+                        let len = app.sort_component.get_data_len();
+                        app.sort_component = Box::new(InsertionSort::new(len));
+                    }
+                    KeyCode::Char('4') => {
+                        let len = app.sort_component.get_data_len();
+                        app.sort_component = Box::new(MergeSort::new(len));
+                    }
+                    KeyCode::Char('5') => {
+                        let len = app.sort_component.get_data_len();
+                        app.sort_component = Box::new(QuickSort::new(len));
+                    }
+                    _ => {}
+                },
             }
-            None => match key_code {
-                KeyCode::Char('q') => self.quit(),
-                KeyCode::Enter => self.is_auto_sorting = true,
-                KeyCode::Char('s') => {
-                    self.ui_state.popup = match self.ui_state.popup {
-                        Some(_) => None,
-                        None => Some(PopUp::SortAlgo),
-                    }
-                }
-                KeyCode::Char(' ') => {
-                    if self.sort_component.is_sort() {
-                        return Ok(());
-                    }
-                    self.sort_component.iter();
-                }
-                KeyCode::Char('r') | KeyCode::Char('R') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component.shuffle(len);
-                }
-                KeyCode::Char('k') => {
-                    let len = self.sort_component.get_data_len() + 1;
-                    if len > self.ui_state.width {
-                        return Ok(());
-                    }
-                    self.sort_component.shuffle(len);
-                }
-                KeyCode::Char('j') => {
-                    let len = self.sort_component.get_data_len() - 1;
-                    if len < 2 {
-                        return Ok(());
-                    }
-                    self.sort_component.shuffle(len);
-                }
-                KeyCode::Char('l') => {
-                    self.tick_rate += 5;
-                }
-                KeyCode::Char('h') => {
-                    if self.tick_rate == 0 {
-                        return Ok(());
-                    }
-                    self.tick_rate -= 5;
-                }
-                _ => {}
-            },
+            app.ui_state.popup = None;
         }
-        Ok(())
+        None => match key_code {
+            KeyCode::Char('q') => app.quit(),
+            KeyCode::Enter => app.is_auto_sorting = true,
+            KeyCode::Char('s') => {
+                app.ui_state.popup = match app.ui_state.popup {
+                    Some(_) => None,
+                    None => Some(PopUp::SortAlgo),
+                }
+            }
+            KeyCode::Char(' ') => {
+                if app.sort_component.is_sort() {
+                    return Ok(());
+                }
+                app.sort_component.iter();
+            }
+            KeyCode::Char('r') | KeyCode::Char('R') => {
+                let len = app.sort_component.get_data_len();
+                app.sort_component.shuffle(len);
+            }
+            KeyCode::Char('k') => {
+                let len = app.sort_component.get_data_len() + 1;
+                if len > app.ui_state.width {
+                    return Ok(());
+                }
+                app.sort_component.shuffle(len);
+            }
+            KeyCode::Char('j') => {
+                let len = app.sort_component.get_data_len() - 1;
+                if len < 2 {
+                    return Ok(());
+                }
+                app.sort_component.shuffle(len);
+            }
+            KeyCode::Char('l') => {
+                app.tick_rate += 5;
+            }
+            KeyCode::Char('h') => {
+                if app.tick_rate == 0 {
+                    return Ok(());
+                }
+                app.tick_rate -= 5;
+            }
+            _ => {}
+        },
     }
-    pub fn key_pop(&mut self, popup_type: PopUp, key_code: &KeyCode) {
-        match popup_type {
-            PopUp::SortAlgo => match key_code {
-                KeyCode::Char('1') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component = Box::new(BubbleSort::new(len));
-                }
-                KeyCode::Char('2') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component = Box::new(SelectionSort::new(len));
-                }
-                KeyCode::Char('3') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component = Box::new(InsertionSort::new(len));
-                }
-                KeyCode::Char('4') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component = Box::new(MergeSort::new(len));
-                }
-                KeyCode::Char('5') => {
-                    let len = self.sort_component.get_data_len();
-                    self.sort_component = Box::new(QuickSort::new(len));
-                }
-                _ => {}
-            },
-        }
-    }
+    Ok(())
 }
