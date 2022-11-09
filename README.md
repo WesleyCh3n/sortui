@@ -1,5 +1,7 @@
 # Sortui
 
+![img](./assets/demo.gif)
+
 This is a self-learning project of visualizing sorting algorithms with terminal
 user interface(tui). This application is written in Rust and
 [tui-rs](https://github.com/fdehau/tui-rs) framework. I'm really enjoy building
