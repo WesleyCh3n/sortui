@@ -9,6 +9,11 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 
+/// [NOTE!]
+/// This originate from https://github.com/fdehau/tui-rs/blob/master/src/widgets/barchart.rs
+/// it couldn't specified the single bar style, So I just add that option to the
+/// data we passed and show it.
+///
 /// Display multiple bars in a single widgets
 ///
 /// # Examples
@@ -220,6 +225,8 @@ impl<'a> Widget for BarChart<'a> {
                             + (self.bar_width - width) / 2,
                         chart_area.bottom() - 2,
                         value_label,
+                        // TODO: actually this should have single option to set
+                        // if not default
                         self.value_style,
                     );
                 }
