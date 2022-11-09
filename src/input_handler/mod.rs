@@ -3,12 +3,12 @@ use std::io;
 use crossterm::event::KeyCode;
 
 use crate::{
-    app::PopUp,
-    components::{
+    algorithms::{
         bubble_sort::BubbleSort, insertion_sort::InsertionSort,
         merge_sort::MergeSort, quick_sort::QuickSort,
         selection_sort::SelectionSort,
     },
+    app::PopUp,
     AppState,
 };
 

@@ -45,6 +45,8 @@ pub struct BarChart<'a> {
     /// Style for the widget
     style: Style,
     /// Slice of (label, value) pair to plot on the chart
+    /// HACK: use (label, value, Option<Style>) to overwrite the default style
+    /// in one bar
     data: &'a [(&'a str, u64, Option<Style>)],
     /// Value necessary for a bar to reach the maximum height (if no value is specified,
     /// the maximum value in the data is taken as reference)
@@ -189,6 +191,7 @@ impl<'a> Widget for BarChart<'a> {
                         chart_area.top() + j,
                     )
                     .set_symbol(symbol)
+                    // HACK: overwrite default style if has specified style
                     .set_style(if let Some(s) = d.2 {
                         s
                     } else {

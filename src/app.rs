@@ -7,7 +7,7 @@ use crossterm::event::{self, Event};
 use tui::{backend::Backend, Terminal};
 
 use crate::{
-    components::{bubble_sort::BubbleSort, SortComponent},
+    algorithms::{bubble_sort::BubbleSort, SortComponent},
     input_handler::handle_key_event,
     ui::ui,
 };

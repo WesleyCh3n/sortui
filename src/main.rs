@@ -1,3 +1,4 @@
+mod algorithms;
 mod app;
 mod components;
 mod input_handler;
