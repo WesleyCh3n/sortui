@@ -63,10 +63,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut AppState) {
     let menu = Paragraph::new(Span::raw(app.sort_component.as_str()))
         .block(
             Block::default()
-                .title(Spans::from(Span::styled(
-                    "Sort Method [S]",
-                    title_style,
-                )))
+                .title(Spans::from(Span::styled("Sort Method [S]", title_style)))
                 .borders(Borders::ALL)
                 .border_style(border_style)
                 .border_type(BorderType::Rounded),
@@ -76,28 +73,23 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut AppState) {
     f.render_widget(menu, menus[0]);
 
     // Data Length
-    let menu = Paragraph::new(Span::raw(
-        app.sort_component.get_data_len().to_string(),
-    ))
-    .block(
-        Block::default()
-            .title(Spans::from(Span::styled("Data Length [J/K]", title_style)))
-            .borders(Borders::ALL)
-            .border_style(border_style)
-            .border_type(BorderType::Rounded),
-    )
-    .style(content_style)
-    .alignment(Alignment::Center);
+    let menu = Paragraph::new(Span::raw(app.sort_component.get_data_len().to_string()))
+        .block(
+            Block::default()
+                .title(Spans::from(Span::styled("Data Length [J/K]", title_style)))
+                .borders(Borders::ALL)
+                .border_style(border_style)
+                .border_type(BorderType::Rounded),
+        )
+        .style(content_style)
+        .alignment(Alignment::Center);
     f.render_widget(menu, menus[1]);
 
     // Tick Rate
     let menu = Paragraph::new(Span::raw(app.tick_rate.to_string()))
         .block(
             Block::default()
-                .title(Spans::from(Span::styled(
-                    "Tick Rate [H/L]",
-                    title_style,
-                )))
+                .title(Spans::from(Span::styled("Tick Rate [H/L]", title_style)))
                 .borders(Borders::ALL)
                 .border_style(border_style)
                 .border_type(BorderType::Rounded),
@@ -130,12 +122,10 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut AppState) {
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(if app.is_auto_sorting {
                     Color::Blue
+                } else if app.sort_component.is_sort() {
+                    Color::Green
                 } else {
-                    if app.sort_component.is_sort() {
-                        Color::Green
-                    } else {
-                        Color::Reset
-                    }
+                    Color::Reset
                 })),
         )
         .data(&data)
@@ -206,9 +196,8 @@ pub fn popup_ui<B: Backend>(f: &mut Frame<B>) {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::styled(
-                format!("{}", e.1),
-                Style::default()
-                    .add_modifier(Modifier::BOLD | Modifier::ITALIC),
+                e.1.to_string(),
+                Style::default().add_modifier(Modifier::BOLD | Modifier::ITALIC),
             ),
         ]))
     })
